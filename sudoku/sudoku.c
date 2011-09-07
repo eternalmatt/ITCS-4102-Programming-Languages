@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-int sudoku[9][9][10];
-void output(), update_others();
-int solve();
+int sudoku[9][9][10], solve();
+void output(), update_others(), reset_sudoku(), initial_update();
+
 int main()
 {
+	reset_sudoku();
 	FILE* file = fopen("sudoku.txt", "r");
 	if (file == NULL) return;
 	
@@ -15,15 +16,15 @@ int main()
 	for(i = 0; i < 9; i++)
 	    for(j = 0; j < 9; j++)
 		fscanf(file, "%d", sudoku[i][j]);
-	
 	fclose(file);
 	
+	initial_update();
 	puts("about to do output");
         if (solve(0, 0))
 		puts("we somehow solved it!");
 	else
 		puts("shit, its not solved");
-
+	
 	output();
 
 	puts("Still here!");
@@ -35,11 +36,13 @@ int main()
 
 int solve(int i, int j)
 {
-	if ( (i %= 9) == 0)		//if i mod 9 is 0, increment j.
+	printf("%d,%d\n", i, j);
+	if (i == 9)		//if i mod 9 is 0, increment j.
+	{	i = 0;	
 		if (++j == 9)		//if after j is incremented, j is 9, return true.
 			return true;	//the puzzle is solved.
-	
-	if (sudoku[i][j]) 		//if cell filled
+	}
+	if (sudoku[i][j][0]) 		//if cell filled
 		return solve(i+1, j);	//solve next position (and exit this function immediately with result)
 
 	int value;
