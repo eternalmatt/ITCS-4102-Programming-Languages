@@ -6,29 +6,29 @@ void output(), update_others(), reset_sudoku(), initial_update();
 
 int main()
 {
-	reset_sudoku();
 	FILE* file = fopen("sudoku.txt", "r");
 	if (file == NULL) return;
 	
 	puts("getting input");
+
+	reset_sudoku();	
 
 	int i, j;
 	for(i = 0; i < 9; i++)
 	    for(j = 0; j < 9; j++)
 		fscanf(file, "%d", sudoku[i][j]);
 	fclose(file);
+
+	output();
 	
 	initial_update();
-	puts("about to do output");
-        if (solve(0, 0))
+        
+	if (solve(0, 0))
 		puts("we somehow solved it!");
 	else
 		puts("shit, its not solved");
 	
 	output();
-
-	puts("Still here!");
-
 }
 
 
@@ -36,24 +36,31 @@ int main()
 
 int solve(int i, int j)
 {
-	printf("%d,%d\n", i, j);
+	printf("%d,%d -> %d\n", i, j, sudoku[i][j][0]);
 	if (i == 9)		//if i mod 9 is 0, increment j.
 	{	i = 0;	
 		if (++j == 9)		//if after j is incremented, j is 9, return true.
 			return true;	//the puzzle is solved.
 	}
-	if (sudoku[i][j][0]) 		//if cell filled
+	if (sudoku[i][j][0] != 0) 		//if cell filled
 		return solve(i+1, j);	//solve next position (and exit this function immediately with result)
 
+	puts("Cell was not filled");
+	
 	int value;
 	for(value = 1; value <= 9; value++)
 		if (valid(i, j, value))
 		{
+			printf("Trying %d\n", value);
 			sudoku[i][j][0] = value;		//we're going to try this value out
 			update_others(i, j);	//update all it is affecting
 			if (solve(i+1, j))	//if solving the puzzle with this value works
 			   return true;		//return true (puzzle is completely solved)
 			/*else continue;*/	//fun optional line. (if solving worked, return true. else, continue solving)
+		}
+		else
+		{
+			printf("%d tested invalid.\n",value); 
 		}
 
 	//you're still here? nothing we tried worked....
@@ -113,12 +120,23 @@ void initial_update()
 void update_others(i, j)
 {
 	int m, n, x;
-	for(m=i%3, n=j%3, x = 0; x < 9; x++)
+	if (i < 3) m = 0;
+	if (i > 2 && i < 5) m = 3;
+	if (i > 5) m = 6;
+	if (j < 3) n = 0;
+	if (j > 2 && j < 8) n = 3;
+	if (j > 5) n = 6;
+	
+	if (sudoku[i][j][0] == 0) { printf("In update_others with %d,%d and shouldn't be", i, j); return;}
+	printf("Updating others. sudoku[%d][%d][0]=%d ", i, j, sudoku[i][j][0]);
+	for(x = 0; x < 9; x++)
 	{
-		sudoku[i][x][sudoku[i][j][0]] = 0;
-		sudoku[x][j][sudoku[i][j][0]] = 0;
-		sudoku[m+x/3][n+x%3][sudoku[i][j][0]] = 0;
+		sudoku[i][x][ sudoku[i][j][0] ] = 0;
+		sudoku[x][j][ sudoku[i][j][0] ] = 0;
+		sudoku[m+x/3][n+x%3][ sudoku[i][j][0] ] = 0;
+		printf("(%d,%d)",m+x/3,n+x%3);
 	}
+	puts("");
 
 }
 
