@@ -7,7 +7,12 @@ void output(int[9][9]);
 
 int main()
 {
-   FILE *file = fopen("sudoku.txt", "r");
+   char fileName[20];
+   printf("%s","Please input a file name: \t");
+   scanf("%s", fileName);
+   printf("%s","Thank you. Parsing and solving now.\n");
+
+   FILE *file = fopen(fileName, "r");
    if (file == NULL) return 0;/*nothing fancy*/
 
    int i, j; /*getting input*/
@@ -32,17 +37,17 @@ int main()
  * and its allll good.
  *
  * Structure goes like this:
- * 1) update indexes
- * 2) make sure cell isn't already filled
- * 3) see if any [1..9] values are valid
- * 4) if one is, try it out, keep solving
- * 5) if nothing was valid, return false
- */
+ * 1) check for base case
+ * 2) check if index off grid
+ * 3) check if cell filled
+ * 4) see if any [1..9] values are valid
+ * 5) if one is, try it out, keep solving
+ * 6) if nothing was valid, return false */
 bool solve(int i, int j)
 {
    if      (i==8 && j==8) return true;          //the recursive base case
-   else if (   i == 9   ) return solve(0,j+1);  //move to next row
-   else if (sudoku[i][j]) return solve(i+1,j);  //return result of solving next
+   else if (   i == 9   ) return solve(0,j+1);  //if i off grid,  move to next row
+   else if (sudoku[i][j]) return solve(i+1,j);  //if cell filled, move to next cell
    else
    {
       int n;
@@ -68,8 +73,7 @@ bool solve(int i, int j)
  * Note i/3 will chop off remainder, then 3* will push the 
  * number up to proper place for box to start.
  * THEN, x/3 walks "slowly" left to right
- * while x%3 walks "thrice" left to right
- */
+ * while x%3 walks "thrice" left to right */
 bool valid(int i, int j, int value)
 {
    int x, m, n;
