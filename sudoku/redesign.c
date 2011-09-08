@@ -7,7 +7,7 @@ void output(int[9][9]);
 
 int main()
 {
-   FILE *file = fopen("hard.txt", "r");
+   FILE *file = fopen("sudoku.txt", "r");
    if (file == NULL) return 0;/*nothing fancy*/
 
    int i, j; /*getting input*/
@@ -21,7 +21,8 @@ int main()
 
    if (solve(0,0)) /*fingers crossed!*/
       puts("We solved it!");
-   else puts("We didn't solve it...");  
+   else 
+      puts("We didn't solve it...");  
 
    //Show how grid looks after solving
    output(sudoku);
@@ -33,35 +34,31 @@ int main()
  * Structure goes like this:
  * 1) update indexes
  * 2) make sure cell isn't already filled
- * 3) see if [1..9] values are valid
+ * 3) see if any [1..9] values are valid
  * 4) if one is, try it out, keep solving
  * 5) if nothing was valid, return false
  */
 bool solve(int i, int j)
 {
-   if (i == 9)
+   if      (i==8 && j==8) return true;          //the recursive base case
+   else if (   i == 9   ) return solve(0,j+1);  //move to next row
+   else if (sudoku[i][j]) return solve(i+1,j);  //return result of solving next
+   else
    {
-      i = 0;
-      if (++j == 9)  //end of grid 
-         return true;//puzzle is solved
-   }
-   if (sudoku[i][j] != 0)  //cell is already filled
-      return solve(i+1,j); //return result of solving next
-
-   int n;
-   for(n = 1; n <= 9; n++)
-      if (valid(i, j, n))
-      {
-         sudoku[i][j] = n;    //try this value out
-         if (solve(i+1, j))   //if solving next cell works
-            return true;      //return true (puzzle solved!)
-         else continue;       //else continue! (not necessary)
-      }
+      int n;
+      for(n = 1; n <= 9; n++)
+         if (valid(i, j, n))
+         {
+            sudoku[i][j] = n;                   //try this value out
+            if (solve(i+1,j)) return true;      //if solving next works, return true (puzzle solved!)
+            else continue;                      //else continue and keep solving! (not necessary)
+         }
    
-   //still here? something we tried didn't work
-   //don't worry, its normal in backtracking
-   sudoku[i][j] = 0; //reset cell
-   return false;
+      //still here? something we tried didn't work
+      //don't worry, its normal in backtracking
+      sudoku[i][j] = 0; //reset cell
+      return false;
+   }
 }
 
 /* returns true if this (i,j) location is valid for "value"
@@ -94,7 +91,7 @@ void output(int grid[9][9])
    {
       for(j = 0; j < 9; j++)
          printf("%d ", grid[i][j]);
-      printf("\n");
+      printf("%s","\n");
    }
 }
 
