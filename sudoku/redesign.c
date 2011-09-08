@@ -7,26 +7,36 @@ void output(int[9][9]);
 
 int main()
 {
-   FILE *file = fopen("sudoku.txt", "r");
+   FILE *file = fopen("hard.txt", "r");
    if (file == NULL) return 0;/*nothing fancy*/
 
    int i, j; /*getting input*/
    for(i = 0; i < 9; i++)
       for(j = 0; j < 9; j++)
-      fscanf(file, "%d", &sudoku[i][j]);
+         fscanf(file, "%d", &sudoku[i][j]);
+   fclose(file);
    
    //Show we have input correctly
    output(sudoku);
 
    if (solve(0,0)) /*fingers crossed!*/
       puts("We solved it!");
-   else puts("We didn't solve it...");
-   
+   else puts("We didn't solve it...");  
+
    //Show how grid looks after solving
    output(sudoku);
 }
 
-
+/* this method for solving the puzzle is heavily recursive
+ * and its allll good.
+ *
+ * Structure goes like this:
+ * 1) update indexes
+ * 2) make sure cell isn't already filled
+ * 3) see if [1..9] values are valid
+ * 4) if one is, try it out, keep solving
+ * 5) if nothing was valid, return false
+ */
 bool solve(int i, int j)
 {
    if (i == 9)
