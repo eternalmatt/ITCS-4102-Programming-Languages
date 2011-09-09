@@ -45,7 +45,7 @@ int main()
  * 6) if nothing was valid, return false */
 bool solve(int i, int j)
 {
-   if      (i==8 && j==8) return true;          //the recursive base case
+   if      (i==9 && j==8) return true;          //the recursive base case
    else if (   i == 9   ) return solve(0,j+1);  //if i off grid,  move to next row
    else if (sudoku[i][j]) return solve(i+1,j);  //if cell filled, move to next cell
    else
