@@ -1,17 +1,28 @@
 
+puzzle :: [[Int]]
+puzzle = [[0,5,0,0,6,0,0,0,1],
+	  [0,0,4,8,0,0,0,7,0],
+	  [8,0,0,0,0,0,0,5,2],
+	  [2,0,0,0,5,7,0,3,0],
+	  [0,0,0,0,0,0,0,0,0],
+	  [0,3,0,6,9,0,0,0,5],
+	  [7,9,0,0,0,0,0,0,8],
+	  [0,1,0,0,0,6,5,0,0],
+	  [5,0,0,0,3,0,0,6,0]]
+	  
 
 
-
-getRow :: [[Int]] -> Int -> [Int]
+getRow :: [[a]] -> Int -> [a]
 getRow grid n = grid !! n
 
-getCol :: [[Int]] -> Int -> [Int]
+getCol :: [[a]] -> Int -> [a]
 getCol grid n = [ row !! n | row <- grid]
 
-getBox :: [[Int]] -> Int -> Int -> [Int]
-getBox grid i j = let threeRows = take 3 $ map (getRow grid) [3*(i`div`3)..]
-                  in  concat $ take 3 $ drop (3*(j`div`3)) threeRows
---getBox grid (x,y) = [ take 3 (drop (3*(x-1)) row) | row <- take 3 (drop (3*(y-1)) grid)]
+getBox :: [[a]] -> Int -> Int -> [a]
+getBox grid i j = let rowStart  = 3 * (i `div` 3)
+                      colStart  = 3 * (j `div` 3)
+                      threeRows = take 3 $ map (getRow grid) [rowStart..]
+                  in  concat $ map (take 3 . drop colStart) threeRows
 {-
 type Grid = [[Int]]
 type Cell = Int
@@ -40,9 +51,16 @@ solve :: [[Int]] -> Int -> Int -> Maybe [[Int]]
 solve grid 8 8 = Just grid
 solve grid i 9 = solve grid (i+1) 0
 solve grid i j
-   | position grid i j /= 0 = solve grid i (j+1)
+   | valueAt grid i j /= 0 = solve grid i (j+1)
    | otherwise = head [ solved | value <- [1..9], let solved  = solve (replaceIndex grid i j value) i (j+1), (and ( map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing]
                       
-position i j k = 0
-replaceIndex i j k l = [[0]]
+valueAt :: [[a]] -> Int -> Int -> a
+valueAt grid i j = (grid !! i) !! j
+
+replaceIndex :: [[a]] -> Int -> Int -> a -> [[a]]
+replaceIndex grid i j value = replace grid i $ replace (getRow grid i) j value
+
+replace :: [a] -> Int -> a -> [a]
+replace (_:xs) 0 n = n : xs
+replace (x:xs) i n = x : replace xs (i-1) n
                       
