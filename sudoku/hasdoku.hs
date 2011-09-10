@@ -1,4 +1,6 @@
 
+
+--and $ map (\x -> sort x == [1..]) $ fromJust solved
 puzzle :: [[Int]]
 puzzle = [[0,5,0,0,6,0,0,0,1],
 	  [0,0,4,8,0,0,0,7,0],
@@ -48,11 +50,24 @@ allSolved grid = all (map (all . partSolved) [allRows, allCols, concat allBoxes]
 
 
 solve :: [[Int]] -> Int -> Int -> Maybe [[Int]]
-solve grid 8 8 = Just grid
+solve grid 8 9 = Just grid
 solve grid i 9 = solve grid (i+1) 0
 solve grid i j
    | valueAt grid i j /= 0 = solve grid i (j+1)
-   | otherwise = head [ solved | value <- [1..9], let solved  = solve (replaceIndex grid i j value) i (j+1), (and ( map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing]
+   | otherwise             = let fancy = [ solved | value <- [1..9], let solved  = solve (replaceIndex grid i j value) i (j+1), (and ( map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing]
+                             in case fancy of []        -> Nothing
+                                              solutions -> head solutions
+   
+{-
+   | otherwise             = case filter valid $ map tryValues [1..9] of {[] -> Nothing; solutions -> head solutions}
+     where tryValues v  = solvedgrid v
+           solvedgrid v = solve (newgrid v) i (j+1)
+           newgrid v    = replaceIndex grid i j v
+           valid        = uniquevalue && solvedgrid /= Nothing
+           uniquevalue  = and $ map (notElem value) [getRow grid i, getCol grid j, getBox i j]
+-}
+   
+   
                       
 valueAt :: [[a]] -> Int -> Int -> a
 valueAt grid i j = (grid !! i) !! j
@@ -63,4 +78,11 @@ replaceIndex grid i j value = replace grid i $ replace (getRow grid i) j value
 replace :: [a] -> Int -> a -> [a]
 replace (_:xs) 0 n = n : xs
 replace (x:xs) i n = x : replace xs (i-1) n
+
+{-
+
+| otherwise = head [ solved | value <- [1..9], let solved  = solve (replaceIndex grid i j value) i (j+1), (and ( map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing]
+
+-}
+   
                       
