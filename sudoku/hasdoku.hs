@@ -1,7 +1,20 @@
+import Data.List (sort)
+import Data.Maybe (fromMaybe)
 
+main = print $ fromMaybe [] (solve hard 0 0)
 
---and $ map (\x -> sort x == [1..]) $ fromJust solved
-puzzle :: [[Int]]
+--and $ map (\x -> sort x == [1..9]) $ fromJust solved
+empty, hard, puzzle :: [[Int]]
+empty  = replicate 9 $ replicate 9 0
+hard   = [[0,0,0,0,0,0,0,0,0],
+          [0,0,0,0,0,3,0,8,5],
+          [0,0,1,0,2,0,0,0,0],
+          [0,0,0,5,0,7,0,0,0],
+          [0,0,4,0,0,0,1,0,0],
+          [0,9,0,0,0,0,0,0,0],
+          [5,0,0,0,0,0,0,7,3],
+          [0,0,2,0,1,0,0,0,0],
+          [0,0,0,0,4,0,0,0,9]]
 puzzle = [[0,5,0,0,6,0,0,0,1],
 	  [0,0,4,8,0,0,0,7,0],
 	  [8,0,0,0,0,0,0,5,2],
@@ -12,8 +25,33 @@ puzzle = [[0,5,0,0,6,0,0,0,1],
 	  [0,1,0,0,0,6,5,0,0],
 	  [5,0,0,0,3,0,0,6,0]]
 	  
+solved :: [[Int]] -> Maybe [[Int]]
+solved grid = solve puzzle 0 0
+
+checkit :: [[Int]] -> Bool
+checkit grid = and $ map (\x -> sort x == [1..9]) $ fromMaybe [] $ solved grid
 
 
+	  
+             
+
+solve :: [[Int]] -> Int -> Int -> Maybe [[Int]]
+solve grid 8 9 = Just grid
+solve grid i 9 = solve grid (i+1) 0
+solve grid i j | valueAt grid i j /= 0 = solve grid i (j+1) 
+               | otherwise = 
+ case  possibilities of {[] -> Nothing; solutions -> head solutions}
+ where possibilities   = concatMap guess [1..9]
+       guess value     = if unique && solution /= Nothing then [solution] else []
+        where solution = solve nextGrid i (j+1)
+              nextGrid = replaceIndex grid i j value
+              unique   = and uniques
+              uniques  = map (notElem value) [row,col,box]
+              row = getRow grid i
+              col = getCol grid j
+              box = getBox grid i j
+                  
+                                   
 getRow :: [[a]] -> Int -> [a]
 getRow grid n = grid !! n
 
@@ -25,50 +63,7 @@ getBox grid i j = let rowStart  = 3 * (i `div` 3)
                       colStart  = 3 * (j `div` 3)
                       threeRows = take 3 $ map (getRow grid) [rowStart..]
                   in  concat $ map (take 3 . drop colStart) threeRows
-{-
-type Grid = [[Int]]
-type Cell = Int
-type Row = [Int]
-type Col = [Int]
-type Box = [Int]
-allRows :: Grid -> [Row]
-allRows = id
-
-allCols :: Grid -> [Col]
-allCols grid = map (getCol grid) [0..8]
-
-allBoxes :: Grid -> [Box]
-allBoxes grid = map (getBox grid) [ (x,y) | x<-[1..3], y<-[1..3]]
-
-partSolved :: [Int] -> Bool
-partSolved part = sort part == [1..9]
-
-
-allSolved :: Grid -> Bool
-allSolved grid = all (map (all . partSolved) [allRows, allCols, concat allBoxes])
--}
-
-
-solve :: [[Int]] -> Int -> Int -> Maybe [[Int]]
-solve grid 8 9 = Just grid
-solve grid i 9 = solve grid (i+1) 0
-solve grid i j
-   | valueAt grid i j /= 0 = solve grid i (j+1)
-   | otherwise             = let fancy = [ solved | value <- [1..9], let solved  = solve (replaceIndex grid i j value) i (j+1), (and ( map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing]
-                             in case fancy of []        -> Nothing
-                                              solutions -> head solutions
-   
-{-
-   | otherwise             = case filter valid $ map tryValues [1..9] of {[] -> Nothing; solutions -> head solutions}
-     where tryValues v  = solvedgrid v
-           solvedgrid v = solve (newgrid v) i (j+1)
-           newgrid v    = replaceIndex grid i j v
-           valid        = uniquevalue && solvedgrid /= Nothing
-           uniquevalue  = and $ map (notElem value) [getRow grid i, getCol grid j, getBox i j]
--}
-   
-   
-                      
+                               
 valueAt :: [[a]] -> Int -> Int -> a
 valueAt grid i j = (grid !! i) !! j
 
@@ -81,8 +76,26 @@ replace (x:xs) i n = x : replace xs (i-1) n
 
 {-
 
-| otherwise = head [ solved | value <- [1..9], let solved  = solve (replaceIndex grid i j value) i (j+1), (and ( map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing]
+| otherwise = let fancy = [ solved | value <- [1..9], let solved  = solve (replaceIndex grid i j value) i (j+1), (and ( map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing]
+              in case fancy of []        -> Nothing
+                               solutions -> head solutions
+                                              
+[21:44] <Jafet> @undo [ solved | value <- [1..9], let solved  = solve (replaceIndex grid i j value) i (j+1), (and ( map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing]
+[21:44] <lambdabot> concatMap (\ value -> let { solved = solve (replaceIndex grid i j value) i (j + 1)} in if (and (map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing then [
+[21:44] <lambdabot> solved] else []) [1 .. 9]
+[21:45] <Jafet> wtf, undo is scary
+[21:45] <rwbarton> I didn't know @undo could do that
+                                              
 
+
+--this is essentially what lambdabot said
+concatMap (\ value -> let solvedgrid  = solve newGrid i (j+1)
+                          newgrid     = replaceIndex grid i j value
+                          uniquevalue = and $ map (notElem value) [getRow grid i, getCol grid j, getBox grid i j]
+                      in if uniquevalue && solved /= Nothing 
+                         then [solved] 
+                         else []
+          ) [1 .. 9]
+          
 -}
-   
-                      
+                 
