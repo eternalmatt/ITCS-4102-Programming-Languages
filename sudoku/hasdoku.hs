@@ -1,9 +1,8 @@
-import Data.List (sort)
-import Data.Maybe (fromMaybe)
+import Data.List
+import Data.Maybe
 
 main = print $ fromMaybe [] (solve hard 0 0)
 
---and $ map (\x -> sort x == [1..9]) $ fromJust solved
 empty, hard, puzzle :: [[Int]]
 empty  = replicate 9 $ replicate 9 0
 hard   = [[0,0,0,0,0,0,0,0,0],
@@ -26,7 +25,7 @@ puzzle = [[0,5,0,0,6,0,0,0,1],
 	  [5,0,0,0,3,0,0,6,0]]
 	  
 solved :: [[Int]] -> Maybe [[Int]]
-solved grid = solve puzzle 0 0
+solved grid = solve grid 0 0
 
 checkit :: [[Int]] -> Bool
 checkit grid = and $ map (\x -> sort x == [1..9]) $ fromMaybe [] $ solved grid
@@ -38,11 +37,13 @@ checkit grid = and $ map (\x -> sort x == [1..9]) $ fromMaybe [] $ solved grid
 solve :: [[Int]] -> Int -> Int -> Maybe [[Int]]
 solve grid 8 9 = Just grid
 solve grid i 9 = solve grid (i+1) 0
-solve grid i j | valueAt grid i j /= 0 = solve grid i (j+1) 
-               | otherwise = 
- case  possibilities of {[] -> Nothing; solutions -> head solutions}
- where possibilities   = concatMap guess [1..9]
-       guess value     = if unique && solution /= Nothing then [solution] else []
+solve grid i j =
+ if grid !! i !! j /= 0
+ then solve grid i (j+1)
+ else first possibilities
+ where possibilities   = map guessing [1..9]
+       guessing :: Int -> Maybe [[Int]]
+       guessing value  = if unique then solution else Nothing
         where solution = solve nextGrid i (j+1)
               nextGrid = replaceIndex grid i j value
               unique   = and uniques
@@ -50,8 +51,25 @@ solve grid i j | valueAt grid i j /= 0 = solve grid i (j+1)
               row = getRow grid i
               col = getCol grid j
               box = getBox grid i j
-                  
-                                   
+
+
+--Perhaps "first" not the most appropriate name, but it
+--accomplishes what I need. 
+--if (list == all Nothing), then Nothing; 
+--else grab the first non-Nothing and wrap with Just.
+--
+--Another horrific option (among many other trials) included this:
+--fromMaybe Nothing $ find (/= Nothing) possibilities
+first :: [Maybe a] -> Maybe a
+first []           = Nothing
+first (Nothing:xs) = first xs
+first (x:_)        = x
+
+              
+firstNot :: (Eq a) => (a -> Bool) -> [a] -> Maybe a
+firstNot _   []    = Nothing
+firstNot eq (x:xs) = if eq x then firstNot eq xs else Just x
+                                                    
 getRow :: [[a]] -> Int -> [a]
 getRow grid n = grid !! n
 
@@ -63,10 +81,8 @@ getBox grid i j = let rowStart  = 3 * (i `div` 3)
                       colStart  = 3 * (j `div` 3)
                       threeRows = take 3 $ map (getRow grid) [rowStart..]
                   in  concat $ map (take 3 . drop colStart) threeRows
+                  
                                
-valueAt :: [[a]] -> Int -> Int -> a
-valueAt grid i j = (grid !! i) !! j
-
 replaceIndex :: [[a]] -> Int -> Int -> a -> [[a]]
 replaceIndex grid i j value = replace grid i $ replace (getRow grid i) j value
 
