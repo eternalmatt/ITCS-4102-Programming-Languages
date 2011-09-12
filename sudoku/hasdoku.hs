@@ -46,8 +46,7 @@ solve grid i j =
        guessing value  = if unique then solution else Nothing
         where solution = solve nextGrid i (j+1)
               nextGrid = replaceIndex grid i j value
-              unique   = and uniques
-              uniques  = map (notElem value) [row,col,box]
+              unique   = all (notElem value) [row,col,box]
               row = getRow grid i
               col = getCol grid j
               box = getBox grid i j
@@ -77,10 +76,9 @@ getCol :: [[a]] -> Int -> [a]
 getCol grid n = [ row !! n | row <- grid]
 
 getBox :: [[a]] -> Int -> Int -> [a]
-getBox grid i j = let rowStart  = 3 * (i `div` 3)
-                      colStart  = 3 * (j `div` 3)
-                      threeRows = take 3 $ map (getRow grid) [rowStart..]
-                  in  concat $ map (take 3 . drop colStart) threeRows
+getBox grid i j = let row = 3 * (i `div` 3)
+                      col = 3 * (j `div` 3)
+                  in  concatMap (take 3 . drop col . getRow grid) [row,row+1,row+2]
                   
                                
 replaceIndex :: [[a]] -> Int -> Int -> a -> [[a]]
