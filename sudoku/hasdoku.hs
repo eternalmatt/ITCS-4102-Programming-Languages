@@ -1,5 +1,3 @@
-import Data.List (sort)
-import Data.Maybe (fromMaybe)
 import System.Environment (getArgs)
 
 
@@ -7,17 +5,66 @@ main = do
     args <- getArgs
     contents <- readFile $ head args
     let input    = take 9 (readPuzzle contents)
-        solution = fromMaybe [] $ solved input
+        solution = solved input
         output   = showPuzzle solution
     putStrLn output
-    
+
+--separates string by lines, tokenizes by spaces, and converts to integers
 readPuzzle :: String -> [[Int]]
 readPuzzle xs = map (map read) (map words (lines xs))
-                     
-showPuzzle :: [[Int]] -> String
-showPuzzle [] = "A solution was not found!"
-showPuzzle pz = show pz
 
+--converts to [[String]], concats with spaces, and separates by newlines
+showPuzzle :: Maybe [[Int]] -> String
+showPuzzle (Nothing) = "A solution was not found!"
+showPuzzle (Just pz) = unlines $ map unwords $ map (map show) pz
+
+--solves a puzzle. do note Haskell lists are zero-based
+solved :: [[Int]] -> Maybe [[Int]]
+solved grid = solve grid 0 0
+
+
+solve :: [[Int]] -> Int -> Int -> Maybe [[Int]]
+solve grid 8 9 = Just grid
+solve grid i 9 = solve grid (i+1) 0
+solve grid i j =
+ if grid !! i !! j /= 0
+ then solve grid i (j+1)
+ else first possibilities
+  where possibilities   = map guessing [1..9]
+        guessing value  = if unique then solution else Nothing
+         where solution = solve nextGrid i (j+1)
+               nextGrid = replace grid i (replace row j value)
+               unique   = all (notElem value) [row,col,box]
+               row = getRow grid i
+               col = getCol grid j
+               box = getBox grid i j
+
+
+--returns first occurance of Just something
+--if list turns out to be all Nothing, return Nothing
+--fromMaybe Nothing $ find (/= Nothing) possibilities
+first :: [Maybe a] -> Maybe a
+first []           = Nothing
+first (Nothing:xs) = first xs
+first (x:_)        = x
+
+--returns the n-th row or column
+getRow,getCol :: [[a]] -> Int -> [a]
+getRow grid n = grid !! n
+getCol grid n = [ row !! n | row <- grid]
+
+--returns the box AROUND (i,j)
+getBox :: [[a]] -> Int -> Int -> [a]
+getBox grid i j = let row = 3 * (i `div` 3)
+                      col = 3 * (j `div` 3)
+                  in  concatMap (take 3 . drop col . getRow grid) [row,row+1,row+2]
+
+--replaces the i-th element with n.
+replace :: [a] -> Int -> a -> [a]
+replace (_:xs) 0 n = n : xs
+replace (x:xs) i n = x : replace xs (i-1) n
+
+--a few test cases
 empty, hard, puzzle :: [[Int]]
 empty  = replicate 9 $ replicate 9 0
 hard   = [[0,0,0,0,0,0,0,0,0],
@@ -39,69 +86,22 @@ puzzle = [[0,5,0,0,6,0,0,0,1],
 	  [0,1,0,0,0,6,5,0,0],
 	  [5,0,0,0,3,0,0,6,0]]
 	  
-solved :: [[Int]] -> Maybe [[Int]]
-solved grid = solve grid 0 0
-
-
-
-solve :: [[Int]] -> Int -> Int -> Maybe [[Int]]
-solve grid 8 9 = Just grid
-solve grid i 9 = solve grid (i+1) 0
-solve grid i j =
- if grid !! i !! j /= 0
- then solve grid i (j+1)
- else first possibilities
-  where possibilities   = map guessing [1..9]
-        guessing value  = if unique then solution else Nothing
-         where solution = solve nextGrid i (j+1)
-               nextGrid = replace grid i (replace row j value)
-               unique   = all (notElem value) [row,col,box]
-               row = getRow grid i
-               col = getCol grid j
-               box = getBox grid i j
-
-
---Perhaps "first" not the most appropriate name, but it
---accomplishes what I need. 
---if (list == all Nothing), then Nothing; 
---else grab the first non-Nothing and wrap with Just.
---
---Another horrific option (among many other trials) included this:
---fromMaybe Nothing $ find (/= Nothing) possibilities
-first :: [Maybe a] -> Maybe a
-first []           = Nothing
-first (Nothing:xs) = first xs
-first (x:_)        = x
-
-
-getRow,getCol :: [[a]] -> Int -> [a]
-getRow grid n = grid !! n
-getCol grid n = [ row !! n | row <- grid]
-
-getBox :: [[a]] -> Int -> Int -> [a]
-getBox grid i j = let row = 3 * (i `div` 3)
-                      col = 3 * (j `div` 3)
-                  in  concatMap (take 3 . drop col . getRow grid) [row,row+1,row+2]
-
-replace :: [a] -> Int -> a -> [a]
-replace (_:xs) 0 n = n : xs
-replace (x:xs) i n = x : replace xs (i-1) n
-
 {-
+Allow me to explain the logic in the solve method, or at least the very last part.
+When we are solving a grid we need to do a couple things.
+The first thing is to map some values across new grids and see how they try out.
+When we map them, we'll have to replace what's currently there (its always a zero).
+Now, if this mapping was unique (say, its the only x-value in its row/col/box)
+then lets just keep on solving and mapping new values.
+If it isn't unique, then return Nothing, signaling nothing worked.
+When that happens, it bubbles up to the last grid, where it tries a next value
+and so on and so forth until we reach the last grid index and it works.
 
 | otherwise = let fancy = [ solved | value <- [1..9], let solved  = solve (replaceIndex grid i j value) i (j+1), (and ( map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing]
               in case fancy of []        -> Nothing
                                solutions -> head solutions
-                                              
-[21:44] <Jafet> @undo [ solved | value <- [1..9], let solved  = solve (replaceIndex grid i j value) i (j+1), (and ( map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing]
-[21:44] <lambdabot> concatMap (\ value -> let { solved = solve (replaceIndex grid i j value) i (j + 1)} in if (and (map (notElem value) [getRow grid i, getCol grid j, getBox grid i j])) && solved /= Nothing then [
-[21:44] <lambdabot> solved] else []) [1 .. 9]
-[21:45] <Jafet> wtf, undo is scary
-[21:45] <rwbarton> I didn't know @undo could do that
-                                              
 
-
---this is essentially what lambdabot said
+--that list comprehension essentially looks like this when undone
 concatMap (\ value -> let solvedgrid  = solve newGrid i (j+1)
                           newgrid     = replaceIndex grid i j value
                           uniquevalue = and $ map (notElem value) [getRow grid i, getCol grid j, getBox grid i j]
@@ -109,6 +109,7 @@ concatMap (\ value -> let solvedgrid  = solve newGrid i (j+1)
                          then [solved] 
                          else []
           ) [1 .. 9]
-          
+--and after a tremoundous effort, i was able to transform it into
+--what is now everything after the "else" in the solve function
 -}
                  
