@@ -1,7 +1,22 @@
-import Data.List
-import Data.Maybe
+import Data.List (sort)
+import Data.Maybe (fromMaybe)
+import System.Environment (getArgs)
 
-main = print $ fromMaybe [] (solve hard 0 0)
+
+main = do
+    args <- getArgs
+    contents <- readFile $ head args
+    let input    = take 9 (readPuzzle contents)
+        solution = fromMaybe [] $ solved input
+        output   = showPuzzle solution
+    putStrLn output
+    
+readPuzzle :: String -> [[Int]]
+readPuzzle xs = map (map read) (map words (lines xs))
+                     
+showPuzzle :: [[Int]] -> String
+showPuzzle [] = "A solution was not found!"
+showPuzzle pz = show pz
 
 empty, hard, puzzle :: [[Int]]
 empty  = replicate 9 $ replicate 9 0
@@ -27,12 +42,7 @@ puzzle = [[0,5,0,0,6,0,0,0,1],
 solved :: [[Int]] -> Maybe [[Int]]
 solved grid = solve grid 0 0
 
-checkit :: [[Int]] -> Bool
-checkit grid = and $ map (\x -> sort x == [1..9]) $ fromMaybe [] $ solved grid
 
-
-	  
-             
 
 solve :: [[Int]] -> Int -> Int -> Maybe [[Int]]
 solve grid 8 9 = Just grid
@@ -41,15 +51,14 @@ solve grid i j =
  if grid !! i !! j /= 0
  then solve grid i (j+1)
  else first possibilities
- where possibilities   = map guessing [1..9]
-       guessing :: Int -> Maybe [[Int]]
-       guessing value  = if unique then solution else Nothing
-        where solution = solve nextGrid i (j+1)
-              nextGrid = replaceIndex grid i j value
-              unique   = all (notElem value) [row,col,box]
-              row = getRow grid i
-              col = getCol grid j
-              box = getBox grid i j
+  where possibilities   = map guessing [1..9]
+        guessing value  = if unique then solution else Nothing
+         where solution = solve nextGrid i (j+1)
+               nextGrid = replace grid i (replace row j value)
+               unique   = all (notElem value) [row,col,box]
+               row = getRow grid i
+               col = getCol grid j
+               box = getBox grid i j
 
 
 --Perhaps "first" not the most appropriate name, but it
@@ -64,25 +73,15 @@ first []           = Nothing
 first (Nothing:xs) = first xs
 first (x:_)        = x
 
-              
-firstNot :: (Eq a) => (a -> Bool) -> [a] -> Maybe a
-firstNot _   []    = Nothing
-firstNot eq (x:xs) = if eq x then firstNot eq xs else Just x
-                                                    
-getRow :: [[a]] -> Int -> [a]
-getRow grid n = grid !! n
 
-getCol :: [[a]] -> Int -> [a]
+getRow,getCol :: [[a]] -> Int -> [a]
+getRow grid n = grid !! n
 getCol grid n = [ row !! n | row <- grid]
 
 getBox :: [[a]] -> Int -> Int -> [a]
 getBox grid i j = let row = 3 * (i `div` 3)
                       col = 3 * (j `div` 3)
                   in  concatMap (take 3 . drop col . getRow grid) [row,row+1,row+2]
-                  
-                               
-replaceIndex :: [[a]] -> Int -> Int -> a -> [[a]]
-replaceIndex grid i j value = replace grid i $ replace (getRow grid i) j value
 
 replace :: [a] -> Int -> a -> [a]
 replace (_:xs) 0 n = n : xs
