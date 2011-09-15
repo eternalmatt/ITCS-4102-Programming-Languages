@@ -2,8 +2,8 @@ import System.Environment (getArgs)
 
 
 main = do
-    args <- getArgs
-    contents <- readFile $ head args
+    [fileStr] <- getArgs
+    contents  <- readFile fileStr
     let input    = take 9 (readPuzzle contents)
         solution = solved input
         output   = showPuzzle solution
@@ -11,7 +11,7 @@ main = do
 
 --separates string by lines, tokenizes by spaces, and converts to integers
 readPuzzle :: String -> [[Int]]
-readPuzzle xs = map (map read) (map words (lines xs))
+readPuzzle = map (map read) . map words . lines
 
 --converts to [[String]], concats with spaces, and separates by newlines
 showPuzzle :: Maybe [[Int]] -> String
@@ -42,7 +42,7 @@ solve grid i j =
 
 --returns first occurance of Just something
 --if list turns out to be all Nothing, return Nothing
---fromMaybe Nothing $ find (/= Nothing) possibilities
+--first = fromMaybe Nothing . find (/= Nothing)
 first :: [Maybe a] -> Maybe a
 first []           = Nothing
 first (Nothing:xs) = first xs
