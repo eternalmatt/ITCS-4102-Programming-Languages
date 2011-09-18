@@ -21,13 +21,43 @@ public class Encryption
 			coefficient = ONE_TWENTY_EIGHT.pow(e++);									//coeff ^= 128
 			
 			char letter = message.charAt(i);												//letter = message[i]
-         letterToAdd = BigInteger.valueOf(letter);			  						//toAdd  = (BigInt)letter
-        	letterToAdd = letterToAdd.multiply(coefficient).multiply(key);		//toAdd *= coefficient * key
-
-         accumulator = accumulator.add(letterToAdd);								//acc   += toAdd
+			letterToAdd = BigInteger.valueOf(letter);			  						//toAdd  = (BigInt)letter
+			letterToAdd = letterToAdd.multiply(coefficient).multiply(key);		//toAdd *= coefficient * key
+			
+			accumulator = accumulator.add(letterToAdd);								//acc   += toAdd
 		}
 
       return accumulator.toString();
    }
+	
+	public String newEncrypt(String message)
+	{
+		String reversed = reverse(message);
+		return keyTimesLetterPlusEncryption(reversed).toString();
+	}
+	
+	private BigInteger recursively(String reversed)
+	{
+		if (reversed.equals(""))
+			return BigInteger.ZERO;
+		else
+			return ONE_TWENTY_EIGHT.multiply(keyTimesLetterPlusEncryption(reversed));
+	}
+	
+	private BigInteger keyTimesLetterPlusEncryption(String reversed)
+	{
+		BigInteger letter = BigInteger.valueOf(reversed.charAt(0));					//letter = (BigInt)letter
+		BigInteger keyTimesLetter = key.multiply(letter);								//key * letter
+		
+		String minusFirstCharacter = reversed.substring(1,reversed.length());	//m.sub(1,len)
+		BigInteger restOfEncryption = recursively(minusFirstCharacter);			//encrypt(m.sub(1,len))
+		
+		return keyTimesLetter.add(restOfEncryption);			//key * letter + encrypt(message.sub(1,len))
+	}
+	
+	private String reverse(String str)
+	{
+		return new StringBuilder(str).reverse().toString();
+	}
 
 }
