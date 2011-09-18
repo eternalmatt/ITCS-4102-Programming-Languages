@@ -49,7 +49,11 @@ public class EncryptionAssignment
 			
 		for(int i=0; i < longMessage.length()-22; i += 22)
 		{
+<<<<<<< HEAD
 			String encryption = encrypter.encrypt(longMessage.substring(i,i+22));
+=======
+			String encryption = encrypter.newEncrypt(longMessage.substring(i,i+22));
+>>>>>>> master
 			System.out.println(encryption);
 		}
 	}

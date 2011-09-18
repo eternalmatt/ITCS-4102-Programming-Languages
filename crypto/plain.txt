@@ -1,6 +1,10 @@
 Sometimes you can see a lot just by looking. (Yogi Berra)
 An economist is an expert who can explain tomorrow why
+<<<<<<< HEAD
 his previous predictions for today did not happen.
 
 
           
+=======
+his previous predictions for today did not happen.
+>>>>>>> master

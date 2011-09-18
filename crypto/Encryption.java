@@ -1,5 +1,8 @@
 import java.math.BigInteger;
+<<<<<<< HEAD
 import java.lang.StringBuilder;
+=======
+>>>>>>> master
 
 public class Encryption
 {
@@ -33,6 +36,7 @@ public class Encryption
 	
 	public String newEncrypt(String message)
 	{
+<<<<<<< HEAD
 		return recursive(reverse(message)).toString();
 	}
 	
@@ -45,6 +49,29 @@ public class Encryption
 			BigInteger letter = BigInteger.valueOf(reversed.charAt(0));
 			return ONE_TWENTY_EIGHT.multiply(key.multiply(letter).add(recursive(reversed.substring(1,reversed.length()))));
 		}
+=======
+		String reversed = reverse(message);
+		return keyTimesLetterPlusEncryption(reversed).toString();
+	}
+	
+	private BigInteger recursively(String reversed)
+	{
+		if (reversed.length() == 0)
+			return BigInteger.ZERO;
+		else
+			return ONE_TWENTY_EIGHT.multiply(keyTimesLetterPlusEncryption(reversed));
+	}
+	
+	private BigInteger keyTimesLetterPlusEncryption(String reversed)
+	{
+		BigInteger letter = BigInteger.valueOf(reversed.charAt(0));					//letter = (BigInt)letter
+		BigInteger keyTimesLetter = key.multiply(letter);								//key * letter
+		
+		String minusFirstCharacter = reversed.substring(1,reversed.length());	//m.sub(1,len)
+		BigInteger restOfEncryption = recursively(minusFirstCharacter);			//encrypt(m.sub(1,len))
+		
+		return keyTimesLetter.add(restOfEncryption);			//key * letter + encrypt(message.sub(1,len))
+>>>>>>> master
 	}
 	
 	private String reverse(String str)
