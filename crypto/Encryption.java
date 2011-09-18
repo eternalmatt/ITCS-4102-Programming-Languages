@@ -38,7 +38,7 @@ public class Encryption
 	
 	private BigInteger recursively(String reversed)
 	{
-		if (reversed.equals(""))
+		if (reversed.length() == 0)
 			return BigInteger.ZERO;
 		else
 			return ONE_TWENTY_EIGHT.multiply(keyTimesLetterPlusEncryption(reversed));
