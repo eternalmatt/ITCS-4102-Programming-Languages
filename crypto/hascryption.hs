@@ -7,7 +7,8 @@ main = do
    key <- readFile fileKey
    choice <- getLine
    whatdo choice
-   
+
+--we're going to pattern match for what the user wants
 whatdo :: String -> IO ()
 whatdo "encryption" = whatdo "e"
 whatdo "e" = do plain <- readFile filePlain
@@ -23,13 +24,18 @@ whatdo "d" = do file <- readFile fileEncryption
                 putStrLn messages
 whatdo _ = do putStrLn "Couldn't understand the input."
               main
-   
+
+--to decrypt a list of encryptions
 decryptMessages :: Integer -> [Integer] -> String
 decryptMessages key = reverse . concat . map (decrypt key)
 
+--to encrypt a list of messages
 encryptMessages :: Integer -> String -> [Integer]
 encryptMessages key = map (encrypt key) . split22
 
+--recurisve decryption
+--base case: message<=key
+--otherwise: extract letter, decrypt minus the letter
 decrypt :: Integer -> Integer -> String
 decrypt key message
    | message <= key = []
@@ -37,29 +43,33 @@ decrypt key message
        where letter = message `div` key `mod` 128
              more   = (message - letter) `div` 128
 
-
+--folds over message with 128*(letter+accumulator)
+--i had to reverse string, overwise last letter would be *128 also
 encrypt :: Integer -> String -> Integer
 encrypt key message = case reverse message of
    reversed -> let (first:rest) = map charToInt reversed
                in key * (first + foldr (\x acc->128*(x+acc)) 0 rest)
            
-           
+--looks like [('A',65),('B',66)..]
 ascii :: [(Char,Integer)]
 ascii = zip [(toEnum 0)..] [0..]
-           
+
+--grab the character's integer pair
 intToChar :: Integer -> Char
 intToChar n = head [ x | (x,i)<-ascii, i == n]
 
+--grab the integer's character pair
 charToInt :: Char -> Integer
 charToInt c = head [ i | (x,i)<-ascii, x == c]
 
-
+--split String into 22 Char blocks, append last with spaces
 split22 :: String -> [String]
 split22 secret = init' ++ [last']
    where phrases = splitBy 22 secret
          init' = init phrases
          last' = take 22 $ last phrases ++ repeat ' '
 
+--generic split method to create list of lists of each length n
 splitBy :: Int -> [a] -> [[a]]
 splitBy _ [] = []
 splitBy n xs = h : splitBy n t

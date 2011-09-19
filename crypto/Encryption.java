@@ -1,5 +1,5 @@
 import java.math.BigInteger;
-import java.lang.StringBuilder;
+
 
 public class Encryption
 {
@@ -10,9 +10,48 @@ public class Encryption
    {
       this.key = new BigInteger(key);
    }
+	
+	//return key*(encrypt(m)+c)
+	public String encrypt(String message)
+	{
+		//this is the same thing that happens in recursively (except for *128)
+		BigInteger letter = BigInteger.valueOf(message.charAt(message.length()-1));	
+		message = message.substring(0,message.length()-1);
+		
+		//return key * (encrypt(message) + letter)
+		return recursively(message).add(letter).multiply(key).toString();
+	}
+	
+	//if length == 0, return 0;
+	//else return 128*(encrypt(m)+c);
+	private BigInteger recursively(String message)
+	{
+		if (message.length() == 0)			//if length is zero
+			return BigInteger.ZERO;			//we are done. return 0.
+		else
+		{
+			//grab the last letter from the message and convert to BigInteger
+			BigInteger letter = BigInteger.valueOf(message.charAt(message.length()-1));	
+		
+		
+			//get substring minus that letter (basically decrement the length)
+			message = message.substring(0,message.length()-1);
+		
+		
+			//return 128 * (letter + encrypt(message))
+			return recursively(message).add(letter).multiply(ONE_TWENTY_EIGHT);		//possibly more efficient on the stack
+			//return ONE_TWENTY_EIGHT.multiply(letter.add(recursively(message)));	//possibly more readable  on the eyes
+		}
+	}
+	//interesting to note, the above function could be made into a single line
+	//using ternary [?:] and just putting the "letter" and "message" exactly in place
+	
+	
+	
+	
 
    //returns a string representation of a number which is the encrypted message
-   public String encrypt(String message)
+   public String not_recursive_encryption_that_i_dont_like_anymore(String message)
    {
       BigInteger accumulator, coefficient, letterToAdd;							//declare BigIntegers we'll use
       accumulator = coefficient = letterToAdd = BigInteger.ZERO;				//initialize all to zero
@@ -30,33 +69,4 @@ public class Encryption
 
       return accumulator.toString();
    }
-	
-	public String newEncrypt(String message)
-	{
-		return recursive(reverse(message)).toString();
-	}
-	
-	private BigInteger recursively(String reversed)
-	{
-		if (reversed.length() == 0)
-			return BigInteger.ZERO;
-		else
-			return ONE_TWENTY_EIGHT.multiply(keyTimesLetterPlusEncryption(reversed));
-	}
-	
-	private BigInteger keyTimesLetterPlusEncryption(String reversed)
-	{
-		BigInteger letter = BigInteger.valueOf(reversed.charAt(0));					//letter = (BigInt)letter
-		BigInteger keyTimesLetter = key.multiply(letter);								//key * letter
-		
-		String minusFirstCharacter = reversed.substring(1,reversed.length());	//m.sub(1,len)
-		BigInteger restOfEncryption = recursively(minusFirstCharacter);			//encrypt(m.sub(1,len))
-		
-		return keyTimesLetter.add(restOfEncryption);			//key * letter + encrypt(message.sub(1,len))
-	}
-	
-	private String reverse(String str)
-	{
-		return new StringBuilder(str).reverse().toString();
-	}
 }
