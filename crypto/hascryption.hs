@@ -30,33 +30,28 @@ decryptMessages key = reverse . concat . map (decrypt key)
 encryptMessages :: Integer -> String -> [Integer]
 encryptMessages key = map (encrypt key) . split22
 
-
 decrypt :: Integer -> Integer -> String
 decrypt key message
    | message <= key = []
-   | otherwise      = letter : decrypt key ((message - intChar) `div` 128)
-     where intChar = message `div` key `mod` 128
-           letter  = charFromInt intChar
+   | otherwise      = intToChar letter : decrypt key more
+       where letter = message `div` key `mod` 128
+             more   = (message - letter) `div` 128
 
 
-encrypt :: Integer -> String -> Integer    
-encrypt key message = case reverse message of 
-                 (c:cs) ->       key * intFromChar c + encrypt cs
-   where encrypt (c:cs) = 128 * (key * intFromChar c + encrypt cs)
-         encrypt []     = 0
+encrypt :: Integer -> String -> Integer
+encrypt key message = case reverse message of
+   reversed -> let (first:rest) = map charToInt reversed
+               in key * (first + foldr (\x acc->128*(x+acc)) 0 rest)
            
            
-ascii :: [Char]
-ascii = [(toEnum 0)..]
+ascii :: [(Char,Integer)]
+ascii = zip [(toEnum 0)..] [0..]
            
-charFromInt :: Integer -> Char
-charFromInt n = ascii `genericIndex` n
-   where genericIndex (c:_) 0 = c
-         genericIndex (_:s) i = genericIndex s (i-1)
+intToChar :: Integer -> Char
+intToChar n = head [ x | (x,i)<-ascii, i == n]
 
-intFromChar :: Char -> Integer
-intFromChar c = ascii `indexOf` c
-   where indexOf xs y = head [ i | (x,i)<-zip xs [0..], x == y]
+charToInt :: Char -> Integer
+charToInt c = head [ i | (x,i)<-ascii, x == c]
 
 
 split22 :: String -> [String]
