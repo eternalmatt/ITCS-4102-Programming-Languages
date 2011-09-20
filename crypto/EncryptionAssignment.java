@@ -38,7 +38,7 @@ public class EncryptionAssignment
 	
 	public static void main(String[] args) throws IOException
 	{
-		String key = readFromFile(fileKey)[0];
+		String key = readForKey(fileKey);
 		BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));
 		
 		String input;
@@ -51,18 +51,16 @@ public class EncryptionAssignment
 			if (input.charAt(0)=='e')
 			{
 				String longMessage = new String();
-				String[] messages = readFromFile(filePlain);
-				for(String message : messages)						//iterate through lines from file
-					longMessage += message;								//concatonate together to form one string
+				String message = readForEncryption(filePlain);
 					
-				while (longMessage.length() % 22 != 0)				//while length isn't divisible by 22
-					longMessage += ' ';									//add another blank space (not the most efficient, but it works)
+				while (message.length() % 22 != 0)				//while length isn't divisible by 22
+					message += ' ';									//add another blank space (not the most efficient, but it works)
 				
-				encrypt_messages(key, longMessage);					//encrypt the message with this key
+				encrypt_messages(key, message);					//encrypt the message with this key
 			}
 			else if (input.charAt(0) == 'd')
 			{
-				String[] messages = readFromFile(fileEncryption);
+				ArrayList<String> messages = readForDecryption(fileEncryption);
 				decrypt_messages(key, messages);						//decrypt the messages with this key
 			}
 			else
@@ -76,7 +74,7 @@ public class EncryptionAssignment
 	}
 	
 	static void encrypt_messages(String key, String longMessage)
-	{	
+	{
 		Encryption encrypter = new Encryption(key);				//encrypter with the key
 			
 		for(int i=0; i <= longMessage.length()-22; i += 22)		//loop over each 22 char sequence
@@ -88,7 +86,7 @@ public class EncryptionAssignment
 	}
 	
 	
-	static void decrypt_messages(String key, String[] encryptions)
+	static void decrypt_messages(String key, ArrayList<String> encryptions)
 	{
 		Decryption decrypter = new Decryption(key);			//decrypter with the key
 		String accumulator = new String();
@@ -99,18 +97,50 @@ public class EncryptionAssignment
 		System.out.println(accumulator);							//print resulting decrypted string
 	}
 	
-	//Return an Sring array of the lines from the file
-	static String[] readFromFile(String fileName) throws IOException
+	
+	
+	
+	//I'd like to say that yes I am embarrased by the mess that is below.
+	//I had a really difficult time with reading from file, specifically reading \r and \n
+	//from the stream correctly and making sure that BigInteger doesn't get fed them.
+	//i'm sure I missed something, but seriously....why does it have to be this hard?
+	
+	
+	
+	
+	static String readForKey(String fileName) throws IOException
 	{
 		FileReader fr = new FileReader(fileName);
 		BufferedReader br = new BufferedReader(fr);
- 		String line = new String();
+		String key = br.readLine();
+		fr.close();
+		return key;
+	}
+	
+	static ArrayList<String> readForDecryption(String fileName) throws IOException
+	{
+		Scanner sc = new Scanner(new File(fileName));
 		ArrayList<String> lines = new ArrayList<String>();
 		
-		while ((line = br.readLine()) != null)
-			lines.add(line);
+ 		while(sc.hasNext())
+			lines.add(sc.nextLine());
+			
+		sc.close();
+		return lines;
+	}
+	
+	static String readForEncryption(String fileName) throws IOException
+	{
+		FileReader fr = new FileReader(fileName);
+		BufferedReader br = new BufferedReader(fr);
+ 		
+		String value="";
+		String line ="";
+			
+		while ((value = br.readLine()) !=null)
+			line += value;
 			
 		fr.close();
-		return lines.toArray(new String[0]);
+		return line;
 	}
 }

@@ -19,7 +19,7 @@ whatdo "e" = do plain <- readFile filePlain
 whatdo "decryption" = whatdo "d"
 whatdo "d" = do file <- readFile fileEncryption
                 key  <- readFile fileKey
-                let encryptions = map read . reverse $ lines file
+                let encryptions = map read . reverse . filter (/=[]) $ lines file
                     messages = decryptMessages (read key) encryptions
                 putStrLn messages
 whatdo _ = do putStrLn "Couldn't understand the input."
@@ -31,26 +31,32 @@ decryptMessages key = reverse . concat . map (decrypt key)
 
 --to encrypt a list of messages
 encryptMessages :: Integer -> String -> [Integer]
-encryptMessages key = map (encrypt key) . split22
+encryptMessages key = map (encrypt key . reverse) . split22
 
 --recurisve decryption
---base case: message<=key
+--base case: message==0
 --otherwise: extract letter, decrypt minus the letter
 decrypt :: Integer -> Integer -> String
-decrypt key message
-   | message <= key = []
-   | otherwise      = intToChar letter : decrypt key more
-       where letter = message `div` key `mod` 128
-             more   = (message - letter) `div` 128
+decrypt key message = decrypt' (message `div` key)
+   where decrypt' message | message == 0 = []
+                          | otherwise    = intToChar letter : decrypt' more
+                            where letter = message `mod` 128
+                                  more   = (message - letter) `div` 128
 
---folds over message with 128*(letter+accumulator)
---i had to reverse string, overwise last letter would be *128 also
+--recursive encryption
+--base case: string is empty
+--othwerise: 128*(x+encrypt xs) (it was reversed before this)
 encrypt :: Integer -> String -> Integer
+encrypt key (c:cs) = key * (charToInt c + encrypt' cs)
+   where encrypt' (x:xs) = 128 * (charToInt x + encrypt' xs)
+         encrypt' [] = 0
+
+
 encrypt key message = case reverse message of
    reversed -> let (first:rest) = map charToInt reversed
-               in key * (first + foldr (\x acc->128*(x+acc)) 0 rest)
+               in key * (first + foldr1 (\x acc->128*(x+acc)) rest)
            
---looks like [('A',65),('B',66)..]
+--looks like [..('A',65),('B',66)..]
 ascii :: [(Char,Integer)]
 ascii = zip [(toEnum 0)..] [0..]
 

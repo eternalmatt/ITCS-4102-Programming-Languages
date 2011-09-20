@@ -14,10 +14,13 @@ public class Encryption
 	//return key*(encrypt(m)+c)
 	public String encrypt(String message)
 	{
-		//this is the same thing that happens in recursively (except for *128)
-		BigInteger letter = BigInteger.valueOf(message.charAt(message.length()-1));	
-		message = message.substring(0,message.length()-1);
+		int lastChar = message.length()-1;
+		long lastChar2 = message.charAt(lastChar);
+			//grab the last letter from the message and convert to BigInteger
+		BigInteger letter = BigInteger.valueOf(lastChar2);	
 		
+			//get substring minus that letter (basically decrement the length)
+		message = message.substring(0,lastChar);
 		//return key * (encrypt(message) + letter)
 		return recursively(message).add(letter).multiply(key).toString();
 	}
@@ -30,12 +33,14 @@ public class Encryption
 			return BigInteger.ZERO;			//we are done. return 0.
 		else
 		{
+			int lastChar = message.length()-1;
+			long lastChar2 = message.charAt(lastChar);
 			//grab the last letter from the message and convert to BigInteger
-			BigInteger letter = BigInteger.valueOf(message.charAt(message.length()-1));	
+			BigInteger letter = BigInteger.valueOf(lastChar2);	
 		
 		
 			//get substring minus that letter (basically decrement the length)
-			message = message.substring(0,message.length()-1);
+			message = message.substring(0,lastChar);
 		
 		
 			//return 128 * (letter + encrypt(message))

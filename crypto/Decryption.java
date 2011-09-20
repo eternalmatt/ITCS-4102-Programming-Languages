@@ -1,4 +1,5 @@
 import java.math.BigInteger;
+import java.lang.NumberFormatException;
 
 public class Decryption
 {
@@ -12,22 +13,30 @@ public class Decryption
 	
 	public String decrypt(String message)
 	{
-		return algorithm(new BigInteger(message).divide(key));
+		try
+		{
+			return algorithm(new BigInteger(message).divide(key));
+		}
+		catch(NumberFormatException e) 
+		{
+			return new String();
+		}
 	}
 	
-	//if m <= 1 then return "";
-	//else return decrypt((m-c)/128)+c
+	//if m <= 0 then return "";
+	//else return decrypt((m-c)/128)+c where c=m%128
 	private String algorithm(BigInteger message)
 	{
-		if (message.compareTo(BigInteger.ZERO) <= 0)		//if message < 1
+		if (message.compareTo(BigInteger.ZERO) <= 0)		//if message <= 0
 			return "";								            //then return the empty string
 	   else
 		{ 
-			BigInteger letter = message.mod(ONE_TWENTY_EIGHT);					//(m % 128
+			BigInteger letter = message.remainder(ONE_TWENTY_EIGHT);					//(m % 128
 			BigInteger newMessage = message.subtract(letter).divide(ONE_TWENTY_EIGHT);	//(m - (m%128)) / 128
-				
-			char character = (char)letter.intValue(); 	//typecast down to char
-			return algorithm(newMessage) + character;		//build rest of output string
+			
+			int intValue = letter.intValue();
+			char character = (char)intValue;
+			return algorithm(newMessage) + (intValue == 0 ? "" : character);
 		}
 	}
 }
